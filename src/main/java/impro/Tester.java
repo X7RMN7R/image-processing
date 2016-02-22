@@ -30,13 +30,24 @@ public class Tester {
         }
     }
 
+    private static BufferedImage convertToGrayScale(BufferedImage source) {
+        BufferedImage result = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        for (int x = 0; x < source.getWidth(); x++) {
+            for (int y = 0; y < source.getHeight(); y++) {
+                int rgba = source.getRGB(x, y);
+                result.setRGB(x, y, getGrayValueAverage(rgba));
+            }
+        }
+        return result;
+    }
+
     private static BufferedImage detectEdges(BufferedImage image) {
         BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
         for (int x = 1; x < image.getWidth() - 1; x++) {
             for (int y = 1; y < image.getHeight() - 1; y++) {
                 double gradient = Math.abs(getGrayValue(image.getRGB(x + 1, y)) - getGrayValue(image.getRGB(x - 1, y)))
                         + Math.abs(getGrayValue(image.getRGB(x, y + 1)) - getGrayValue(image.getRGB(x, y - 1)));
-                if (gradient < 100) {
+                if (gradient < 80) {
                     result.setRGB(x, y, 0);
                 } else {
                     result.setRGB(x, y, new Color(255, 255, 255).getRGB());
@@ -49,6 +60,11 @@ public class Tester {
     private static double getGrayValue(int rgba) {
         return new Color(rgba, true).getRed() * 0.299 + new Color(rgba, true).getGreen() * 0.587
                 + new Color(rgba, true).getBlue() * 0.114;
+    }
+
+    private static int getGrayValueAverage(int rgba) {
+        int gray = (new Color(rgba, true).getRed() + new Color(rgba, true).getGreen() + new Color(rgba, true).getBlue()) / 3;
+        return new Color(gray, gray, gray).getRGB();
     }
 
     private static void invert(BufferedImage image) {
@@ -64,7 +80,7 @@ public class Tester {
 
     private static void process(BufferedImage image) {
         // Write result in a file
-        BufferedImage processed = detectEdges(image);
+        BufferedImage processed = convertToGrayScale(image);
         try {
             File outputfile = new File("processed.jpg");
             ImageIO.write(processed, "jpg", outputfile);
